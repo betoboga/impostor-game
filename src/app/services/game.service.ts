@@ -53,7 +53,7 @@ export class GameService {
   ];
 
   addPlayer(name: string) {
-    if (this.players().length < 4) {
+    if (this.players().length < 10) {
       this.players.update(p => [...p, { name, role: 'citizen', word: '' }]);
     }
   }
