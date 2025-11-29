@@ -63,8 +63,12 @@ import { GameService } from '../../services/game.service';
           Mínimo 3 jugadores.
         </p>
 
-        <button class="btn" (click)="startGame()" [disabled]="gameService.players().length < 3">
-          EMPEZAR PARTIDA
+        <button
+          class="btn"
+          (click)="startGame()"
+          [disabled]="gameService.players().length < 3 || gameService.isLoading()"
+        >
+          {{ gameService.isLoading() ? 'INICIANDO...' : 'EMPEZAR PARTIDA' }}
         </button>
       </div>
     </div>
@@ -86,8 +90,8 @@ export class LobbyComponent {
     this.gameService.removePlayer(index);
   }
 
-  startGame() {
-    this.gameService.startGame();
+  async startGame() {
+    await this.gameService.startGame();
     this.router.navigate(['/reveal']);
   }
 }
