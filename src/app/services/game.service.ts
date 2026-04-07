@@ -20,6 +20,10 @@ export class GameService {
   currentRound = signal(0);
   isLoading = signal(false);
 
+  // Configuración de partida
+  impostorCount = signal(1);
+  hintsEnabled = signal(false);
+
   // For reveal phase
   revealingPlayerIndex = signal(0);
 
@@ -36,29 +40,6 @@ export class GameService {
     return null;
   });
 
-  private words = [
-    { word: 'Mesa' },
-    { word: 'Pizza' },
-    { word: 'Perro' },
-    { word: 'Playa' },
-    { word: 'Avión' },
-    { word: 'Fútbol' },
-    { word: 'Guitarra' },
-    { word: 'Helado' },
-    { word: 'Montaña' },
-    { word: 'Libro' },
-    { word: 'Coche' },
-    { word: 'Ordenador' },
-    { word: 'Teléfono' },
-    { word: 'Reloj' },
-    { word: 'Zapato' },
-    { word: 'Gafas' },
-    { word: 'Sol' },
-    { word: 'Luna' },
-    { word: 'Estrella' },
-    { word: 'Flor' },
-  ];
-
   addPlayer(name: string) {
     if (this.players().length < 10) {
       this.players.update((p) => [...p, { name, role: 'citizen', word: '' }]);
@@ -66,7 +47,14 @@ export class GameService {
   }
 
   removePlayer(index: number) {
-    this.players.update((p) => p.filter((_, i) => i !== index));
+    this.players.update((p) => {
+      const newPlayers = p.filter((_, i) => i !== index);
+      // Validar que si bajamos de 6 jugadores, solo pueda haber 1 impostor
+      if (newPlayers.length < 6 && this.impostorCount() > 1) {
+        this.impostorCount.set(1);
+      }
+      return newPlayers;
+    });
   }
 
   async startGame() {
@@ -74,25 +62,60 @@ export class GameService {
     await this.nextRound();
   }
 
+  private async generateWord(): Promise<{ word: string; category: string }> {
+    try {
+      const prompt =
+        'Genera una palabra aleatoria en español (sustantivo común) para el juego del Impostor y una categoría muy general que la describa. La categoría no debe revelar directamente la palabra pero sí dar una pista clara. Formato: palabra|categoría. Ejemplo: "ordenador|tecnología". Solo responde con el texto en ese formato.';
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text().trim();
+      const [word, category] = text.split('|').map(s => s.trim().replace(/\./g, ''));
+      
+      if (!word || !category) {
+        throw new Error('Formato de respuesta inválido');
+      }
+      
+      return { word, category };
+    } catch (e) {
+      throw e;
+    }
+  }
+
   async nextRound() {
     this.isLoading.set(true);
     const players = this.players();
     let word = '';
+    let category = '';
 
     try {
-      word = await this.generateWord();
+      const result = await this.generateWord();
+      word = result.word;
+      category = result.category;
     } catch (error) {
-      console.error('Error generating word from AI, using fallback:', error);
-      const wordObj = this.words[Math.floor(Math.random() * this.words.length)];
-      word = wordObj.word;
+      console.error('Error generating word from AI:', error);
+      // Fallback mínimo por seguridad técnica, aunque intentamos siempre usar la IA
+      word = 'Pizza';
+      category = 'Comida';
     }
 
-    const impostorIndex = Math.floor(Math.random() * players.length);
+    const playerCount = players.length;
+    const numImpostors = this.impostorCount();
+    const impostorIndices = new Set<number>();
+    
+    // Seleccionar N impostores aleatorios únicos
+    while (impostorIndices.size < numImpostors) {
+      impostorIndices.add(Math.floor(Math.random() * playerCount));
+    }
+
+    // Generar pista semántica si está habilitada
+    const hint = this.hintsEnabled() 
+      ? ` (Pista: ${category})` 
+      : '';
 
     const newPlayers = players.map((p, i) => ({
       ...p,
-      role: (i === impostorIndex ? 'impostor' : 'citizen') as 'citizen' | 'impostor',
-      word: i === impostorIndex ? 'IMPOSTOR' : word,
+      role: (impostorIndices.has(i) ? 'impostor' : 'citizen') as 'citizen' | 'impostor',
+      word: impostorIndices.has(i) ? `IMPOSTOR${hint}` : word,
     }));
 
     this.players.set(newPlayers);
@@ -100,21 +123,6 @@ export class GameService {
     this.revealingPlayerIndex.set(0);
     this.gameState.set('REVEAL');
     this.isLoading.set(false);
-  }
-
-  private async generateWord(): Promise<string> {
-    try {
-      const prompt =
-        'Palabra aleatoria español (sustantivo común) para juego Spyfall. Común y reconocible. SOLO la palabra.';
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      let text = response.text().trim();
-      // Remove any potential punctuation
-      text = text.replace(/\./g, '');
-      return text;
-    } catch (e) {
-      throw e;
-    }
   }
 
   revealNext() {
