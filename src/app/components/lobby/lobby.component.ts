@@ -82,19 +82,16 @@ import { GameService } from '../../services/game.service';
             <label style="display: block; margin-bottom: 12px; font-weight: 600;">Número de Impostores:</label>
             <div style="display: flex; gap: 12px;">
               <button 
-                class="btn" 
-                [style.background-color]="gameService.impostorCount() === 1 ? 'var(--primary-color)' : 'var(--bg-secondary)'"
-                [style.color]="gameService.impostorCount() === 1 ? 'white' : 'var(--text-primary)'"
+                class="btn"
+                [class.btn-selected]="gameService.impostorCount() === 1"
                 (click)="gameService.impostorCount.set(1)"
                 style="flex: 1;"
               >
                 1
               </button>
               <button 
-                class="btn" 
-                [style.background-color]="gameService.impostorCount() === 2 ? 'var(--primary-color)' : 'var(--bg-secondary)'"
-                [style.color]="gameService.impostorCount() === 2 ? 'white' : 'var(--text-primary)'"
-                [style.opacity]="gameService.players().length < 6 ? '0.5' : '1'"
+                class="btn"
+                [class.btn-selected]="gameService.impostorCount() === 2"
                 [disabled]="gameService.players().length < 6"
                 (click)="gameService.impostorCount.set(2)"
                 style="flex: 1;"
@@ -107,14 +104,18 @@ import { GameService } from '../../services/game.service';
             </p>
           </div>
 
-          <div style="margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); padding: 16px; border-radius: 12px;">
-            <div>
+          <div 
+            [class.btn-selected]="gameService.hintsEnabled()"
+            style="margin-bottom: 32px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); padding: 16px; border-radius: 12px; cursor: pointer;"
+            (click)="gameService.hintsEnabled.set(!gameService.hintsEnabled())"
+          >
+            <div style="pointer-events: none;">
               <span style="display: block; font-weight: 600;">Pistas para impostores</span>
-              <small style="color: var(--text-secondary);">Muestra letra inicial y longitud de la palabra.</small>
+              <small style="color: var(--text-secondary);">Muestra una característica sutil de la palabra.</small>
             </div>
-            <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 28px;">
-              <input type="checkbox" [checked]="gameService.hintsEnabled()" (change)="gameService.hintsEnabled.set(!gameService.hintsEnabled())" style="opacity: 0; width: 0; height: 0;">
-              <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;" 
+            <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 28px; pointer-events: none;">
+              <input type="checkbox" [checked]="gameService.hintsEnabled()" style="opacity: 0; width: 0; height: 0;">
+              <span style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px;" 
                     [style.background-color]="gameService.hintsEnabled() ? 'var(--primary-color)' : '#ccc'">
                 <span style="position: absolute; content: ''; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;"
                       [style.transform]="gameService.hintsEnabled() ? 'translateX(22px)' : 'translateX(0)'"></span>

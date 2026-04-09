@@ -38,9 +38,11 @@ import { GameService } from '../../services/game.service';
         </div>
 
         <div *ngIf="gameService.gameState() === 'FINISHED'">
-          <h3>El Impostor era:</h3>
-          <div class="role-reveal role-impostor" style="font-size: 2rem; margin: 20px 0;">
-            {{ getImpostorName() }}
+          <h3>{{ getImpostorsCount() > 1 ? 'Los Impostores eran:' : 'El Impostor era:' }}</h3>
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin: 20px 0;">
+            <div *ngFor="let impostor of getImpostors()" class="role-reveal role-impostor" style="font-size: 2rem; margin: 0; padding: 12px 24px; background: rgba(255, 64, 129, 0.15); border-radius: 16px; border: 2px solid var(--error-color);">
+              {{ impostor.name }}
+            </div>
           </div>
           <p>
             La palabra era:
@@ -68,8 +70,12 @@ export class GameComponent {
     this.gameService.endRound();
   }
 
-  getImpostorName() {
-    return this.gameService.players().find((p) => p.role === 'impostor')?.name;
+  getImpostorsCount() {
+    return this.gameService.players().filter((p) => p.role === 'impostor').length;
+  }
+
+  getImpostors() {
+    return this.gameService.players().filter((p) => p.role === 'impostor');
   }
 
   getWord() {

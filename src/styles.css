@@ -96,7 +96,18 @@ p {
 }
 
 .btn:active {
-  transform: translateY(1px);
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 0 2px 8px rgba(112, 0, 255, 0.4);
+  background: linear-gradient(45deg, #5a00cc, #6b1fcc);
+}
+
+.btn-selected {
+  background: linear-gradient(45deg, var(--secondary-color), #00b8cc) !important;
+  color: var(--background-start) !important;
+  box-shadow: 0 0 25px rgba(0, 229, 255, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.4);
+  border: 2px solid #ffffff;
+  transform: scale(1.05);
+  font-weight: 800;
 }
 
 .btn:disabled {
@@ -107,14 +118,43 @@ p {
 }
 
 .btn-secondary {
-  background: transparent;
-  border: 2px solid var(--surface-border);
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
   box-shadow: none;
+  margin-top: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+  transform: translateY(2px) scale(0.98);
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary-selected {
+  background: rgba(112, 0, 255, 0.3) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 15px rgba(112, 0, 255, 0.4);
+}
+
+div.btn-selected {
+  background: rgba(0, 229, 255, 0.15) !important;
+  border: 2px solid var(--secondary-color) !important;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
 }
 
 input[type="text"] {

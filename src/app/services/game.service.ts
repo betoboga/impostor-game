@@ -65,11 +65,17 @@ export class GameService {
   private async generateWord(): Promise<{ word: string; category: string }> {
     try {
       const prompt =
-        'Genera una palabra aleatoria en español (sustantivo común) para el juego del Impostor y una categoría muy general que la describa. La categoría no debe revelar directamente la palabra pero sí dar una pista clara. Formato: palabra|categoría. Ejemplo: "ordenador|tecnología". Solo responde con el texto en ese formato.';
+        'Genera una palabra aleatoria en español (sustantivo común) para el juego del Impostor y una pista en forma de una única palabra que sea extremadamente difícil, abstracta o tangencial. No uses características físicas obvias ni categorías. Por ejemplo, si la palabra es "pizza" usa "fracciones" o "compartido" en vez de "horno" o "redondo". Si es "espejo" usa "inverso". Debe ser un reto entender la conexión. Formato: palabra|pista. Solo responde con el texto en ese formato exacto.';
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       let text = response.text().trim();
-      const [word, category] = text.split('|').map(s => s.trim().replace(/\./g, ''));
+      
+      // Limpiar posibles bloques de código y asteriscos
+      text = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').replace(/\*/g, '').trim();
+      
+      const parts = text.split('|').map(s => s.trim().replace(/\./g, ''));
+      const word = parts[0];
+      const category = parts[1];
       
       if (!word || !category) {
         throw new Error('Formato de respuesta inválido');
@@ -93,9 +99,20 @@ export class GameService {
       category = result.category;
     } catch (error) {
       console.error('Error generating word from AI:', error);
-      // Fallback mínimo por seguridad técnica, aunque intentamos siempre usar la IA
-      word = 'Pizza';
-      category = 'Comida';
+      // Fallback si la clave de Gemini no es válida o falla la IA
+      const fallbacks = [
+        { w: 'Gato', h: 'independiente' },
+        { w: 'Ordenador', h: 'binario' },
+        { w: 'Reloj', h: 'inexorable' },
+        { w: 'Montaña', h: 'desnivel' },
+        { w: 'Coche', h: 'rutina' },
+        { w: 'Teléfono', h: 'distancia' },
+        { w: 'Avión', h: 'presión' },
+        { w: 'Pizza', h: 'fracciones' }
+      ];
+      const randomFallback = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+      word = randomFallback.w;
+      category = randomFallback.h;
     }
 
     const playerCount = players.length;
